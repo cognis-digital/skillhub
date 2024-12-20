@@ -47,3 +47,4 @@
 2024-11-06T19:55:05  ci(fixtures): load rules lazily for faster startup
 2024-11-26T14:12:12  chore(config): pin the test dependencies
 2024-12-18T09:29:19  chore: tune defaults
+2024-12-20T16:46:26  test(scoring): cover the multiline case
