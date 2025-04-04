@@ -52,3 +52,4 @@
 2025-01-31T18:20:40  feat(output): stream large files without buffering
 2025-02-21T13:37:47  refactor(format): clarify the README quickstart
 2025-03-14T08:54:54  style(engine): reduce false positives on edge cases
+2025-04-04T15:11:01  ci(io): improve error messages with context
