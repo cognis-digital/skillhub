@@ -56,3 +56,4 @@
 2025-04-25T10:28:08  fix(scan): short-circuit on first critical
 2025-04-28T17:45:15  chore(detect): fix off-by-one in line numbers
 2025-05-19T12:02:22  test(engine): respect .gitignore when walking
+2025-06-09T19:19:29  build(docs): trim whitespace in parsed fields
