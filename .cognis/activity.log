@@ -64,3 +64,4 @@
 2025-09-04T18:44:04  fix(core): add a regression fixture
 2025-09-24T13:01:11  docs: standing on the shoulders of giants (garak, sigma, trufflehog)
 2025-10-15T08:18:18  perf(ci): handle empty and malformed input
+2025-11-05T15:35:25  build(fixtures): add usage examples to help
