@@ -66,3 +66,4 @@
 2025-10-15T08:18:18  perf(ci): handle empty and malformed input
 2025-11-05T15:35:25  build(fixtures): add usage examples to help
 2025-11-26T10:52:32  chore: IRONCLAD hardening pass
+2025-12-17T17:09:39  docs(config): normalize unicode before matching
