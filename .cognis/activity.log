@@ -70,3 +70,4 @@
 2026-01-07T12:26:46  refactor(tests): add --fail-on threshold handling
 2026-01-27T19:43:53  docs: clarify usage notes
 2026-01-31T14:00:00  fix(output): dedupe overlapping findings
+2026-02-21T09:17:07  chore(config): add a JSON schema for output
