@@ -72,3 +72,4 @@
 2026-01-31T14:00:00  fix(output): dedupe overlapping findings
 2026-02-21T09:17:07  chore(config): add a JSON schema for output
 2026-03-14T16:34:14  test: trust, but verify
+2026-04-04T11:51:21  test(scoring): bump the dev toolchain
