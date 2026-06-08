@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: skillhub, labels: { app: skillhub } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: skillhub } }
+  template:
+    metadata: { labels: { app: skillhub } }
+    spec:
+      containers:
+        - name: skillhub
+          image: ghcr.io/cognis-digital/skillhub:latest
+          ports: [{ containerPort: 8000 }]
+          resources:
+            requests: { cpu: "50m", memory: "64Mi" }
+            limits: { cpu: "500m", memory: "256Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: skillhub }
+spec:
+  selector: { app: skillhub }
+  ports: [{ port: 80, targetPort: 8000 }]
