@@ -36,9 +36,9 @@ ride the viral skills-registry pattern
 <a name="features"></a>
 ## Features
 
-- ✅ Todo
-- ✅ Fixme
-- ✅ Xxx
+- ✅ Parse Version
+- ✅ Parse Manifest
+- ✅ Resolve Dependencies
 - ✅ Runs on Linux/macOS/Windows · Docker · devcontainer
 - ✅ Ports in Python, JavaScript, Go, and Rust (`ports/`)
 
