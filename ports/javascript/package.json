@@ -1,0 +1,10 @@
+{
+  "name": "@cognis/skillhub",
+  "version": "0.2.0",
+  "description": "JavaScript port of skillhub (Cognis Neural Suite)",
+  "bin": {
+    "skillhub": "index.js"
+  },
+  "license": "LicenseRef-COCL-1.0",
+  "type": "module"
+}
