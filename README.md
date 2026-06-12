@@ -16,7 +16,7 @@
 </div>
 
 ```bash
-pip install cognis-skillhub
+pip install "git+https://github.com/cognis-digital/skillhub.git"
 skillhub scan .            # → prioritized findings in seconds
 ```
 
@@ -48,7 +48,7 @@ ride the viral skills-registry pattern
 ## Quick start
 
 ```bash
-pip install cognis-skillhub
+pip install "git+https://github.com/cognis-digital/skillhub.git"
 skillhub --version
 skillhub scan .                       # scan current project
 skillhub scan . --format json         # machine-readable
