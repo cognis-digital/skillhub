@@ -14,7 +14,6 @@ from skillhub.core import (  # noqa: E402
     InstallError,
     ManifestError,
     Registry,
-    Skill,
     resolve_dependencies,
 )
 from skillhub.cli import main  # noqa: E402

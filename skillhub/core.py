@@ -19,7 +19,7 @@ import os
 import re
 import shutil
 from dataclasses import dataclass, field, asdict
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 MANIFEST_NAME = "SKILL.md"
 LOCKFILE_NAME = ".skillhub-lock.json"
