@@ -20,6 +20,42 @@ pip install cognis-skillhub
 skillhub scan .            # → prioritized findings in seconds
 ```
 
+## Usage — step by step
+
+1. **Install** (Python 3.9+):
+
+   ```bash
+   pip install skillhub
+   ```
+
+2. **List skills** in a registry (defaults to the current directory):
+
+   ```bash
+   skillhub list -r ./registry
+   ```
+
+3. **Search and inspect.** Rank skills by a query, then view a manifest with its dependencies:
+
+   ```bash
+   skillhub search "pdf extraction" -r ./registry
+   skillhub info pdf-extract -r ./registry
+   ```
+
+4. **Install a skill** into a target directory, overwriting if needed:
+
+   ```bash
+   skillhub install pdf-extract -r ./registry -t ./agent/skills --force
+   skillhub installed -t ./agent/skills
+   ```
+
+5. **Automate / clean up.** Emit JSON for tooling, and uninstall a skill in scripts:
+
+   ```bash
+   skillhub --format json installed -t ./agent/skills | jq '.[].name'
+   skillhub remove pdf-extract -t ./agent/skills
+   ```
+
+
 ## Contents
 
 - [Why skillhub?](#why) · [Features](#features) · [Quick start](#quick-start) · [Example](#example) · [Architecture](#architecture) · [AI stack](#ai-stack) · [How it compares](#how-it-compares) · [Integrations](#integrations) · [Install anywhere](#install-anywhere) · [Related](#related) · [Contributing](#contributing)
