@@ -34,3 +34,6 @@ skillhub = "skillhub.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["skillhub"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
