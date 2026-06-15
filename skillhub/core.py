@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
@@ -26,6 +27,8 @@ LOCKFILE_NAME = ".skillhub-lock.json"
 _REQUIRED_FIELDS = ("name", "version", "description")
 _NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 _VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
+
+logger = logging.getLogger(__name__)
 
 
 class SkillError(Exception):
@@ -74,6 +77,8 @@ def parse_manifest(text: str) -> Tuple[Dict[str, object], str]:
     Format: a ``---`` fenced front-matter block of ``key: value`` lines,
     followed by the free-form body. Returns ``(metadata, body)``.
     """
+    if not isinstance(text, str):
+        raise ManifestError("manifest text must be a string")
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         raise ManifestError("manifest must start with a '---' front-matter fence")
@@ -121,9 +126,12 @@ def _hash_dir(path: str) -> str:
             fp = os.path.join(root, fname)
             rel = os.path.relpath(fp, path).replace(os.sep, "/")
             h.update(rel.encode("utf-8"))
-            with open(fp, "rb") as fh:
-                for chunk in iter(lambda: fh.read(65536), b""):
-                    h.update(chunk)
+            try:
+                with open(fp, "rb") as fh:
+                    for chunk in iter(lambda: fh.read(65536), b""):
+                        h.update(chunk)
+            except OSError as exc:
+                logger.warning("skipping unreadable file in hash: %s: %s", fp, exc)
     return h.hexdigest()
 
 
@@ -157,8 +165,18 @@ class Skill:
         manifest_path = os.path.join(path, MANIFEST_NAME)
         if not os.path.isfile(manifest_path):
             raise ManifestError(f"no {MANIFEST_NAME} in {path}")
-        with open(manifest_path, "r", encoding="utf-8") as fh:
-            meta, body = parse_manifest(fh.read())
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as fh:
+                raw = fh.read()
+        except OSError as exc:
+            raise ManifestError(
+                f"cannot read manifest {manifest_path}: {exc}"
+            ) from exc
+        except UnicodeDecodeError as exc:
+            raise ManifestError(
+                f"manifest is not valid UTF-8: {manifest_path}: {exc}"
+            ) from exc
+        meta, body = parse_manifest(raw)
         return cls(
             name=str(meta["name"]),
             version=str(meta["version"]),
@@ -178,6 +196,13 @@ def resolve_dependencies(
 
     Raises InstallError on a missing dependency or a dependency cycle.
     """
+    if not root or not isinstance(root, str):
+        raise InstallError(
+            f"root skill name must be a non-empty string, got {root!r}"
+        )
+    if root not in available:
+        raise InstallError(f"skill not found: {root!r}")
+
     order: List[str] = []
     visiting: set = set()
     done: set = set()
@@ -208,6 +233,10 @@ class Registry:
     """A directory of skill folders."""
 
     def __init__(self, path: str):
+        if not path or not isinstance(path, str):
+            raise SkillError(
+                f"registry path must be a non-empty string, got {path!r}"
+            )
         self.path = os.path.abspath(path)
 
     def _ensure(self) -> None:
@@ -224,7 +253,11 @@ class Registry:
                 continue
             if not os.path.isfile(os.path.join(d, MANIFEST_NAME)):
                 continue
-            sk = Skill.from_dir(d)
+            try:
+                sk = Skill.from_dir(d)
+            except ManifestError as exc:
+                logger.warning("skipping invalid skill %r: %s", d, exc)
+                continue
             if sk.name in out:
                 # keep the higher version
                 if sk.version_tuple <= out[sk.name].version_tuple:
@@ -233,6 +266,10 @@ class Registry:
         return out
 
     def get(self, name: str) -> Skill:
+        if not name or not isinstance(name, str):
+            raise SkillError(
+                f"skill name must be a non-empty string, got {name!r}"
+            )
         skills = self.skills()
         if name not in skills:
             raise SkillError(f"skill not found in registry: {name!r}")
@@ -240,6 +277,8 @@ class Registry:
 
     def search(self, query: str) -> List[Tuple[Skill, int]]:
         """Rank skills by relevance to ``query``. Returns (skill, score)."""
+        if not isinstance(query, str):
+            raise SkillError(f"search query must be a string, got {query!r}")
         q = query.lower().strip()
         terms = [t for t in re.split(r"\s+", q) if t]
         results: List[Tuple[Skill, int]] = []
@@ -272,16 +311,26 @@ class Registry:
         if os.path.isfile(lp):
             with open(lp, "r", encoding="utf-8") as fh:
                 try:
-                    return json.load(fh)
-                except json.JSONDecodeError:
+                    data = json.load(fh)
+                    if not isinstance(data, dict):
+                        raise ValueError("lockfile root must be a JSON object")
+                    return data
+                except (json.JSONDecodeError, ValueError, OSError) as exc:
+                    logger.warning(
+                        "lockfile %s is corrupt or unreadable (%s); starting fresh",
+                        lp, exc,
+                    )
                     return {"installed": {}}
         return {"installed": {}}
 
     @staticmethod
     def _save_lock(target: str, lock: Dict[str, object]) -> None:
         lp = os.path.join(target, LOCKFILE_NAME)
-        with open(lp, "w", encoding="utf-8") as fh:
-            json.dump(lock, fh, indent=2, sort_keys=True)
+        try:
+            with open(lp, "w", encoding="utf-8") as fh:
+                json.dump(lock, fh, indent=2, sort_keys=True)
+        except OSError as exc:
+            raise InstallError(f"cannot write lockfile {lp}: {exc}") from exc
 
     def install(
         self, name: str, target: str, force: bool = False
@@ -294,7 +343,12 @@ class Registry:
         available = self.skills()
         if name not in available:
             raise InstallError(f"skill not found in registry: {name!r}")
-        os.makedirs(target, exist_ok=True)
+        try:
+            os.makedirs(target, exist_ok=True)
+        except OSError as exc:
+            raise InstallError(
+                f"cannot create target directory {target!r}: {exc}"
+            ) from exc
         order = resolve_dependencies(name, available)
         lock = self._load_lock(target)
         installed = lock.setdefault("installed", {})  # type: ignore[assignment]
@@ -316,7 +370,12 @@ class Registry:
                 continue
             if os.path.isdir(dest):
                 shutil.rmtree(dest)
-            shutil.copytree(sk.path, dest)
+            try:
+                shutil.copytree(sk.path, dest)
+            except OSError as exc:
+                raise InstallError(
+                    f"failed to copy skill {sk_name!r} to {dest!r}: {exc}"
+                ) from exc
             installed[sk_name] = {  # type: ignore[index]
                 "version": sk.version,
                 "hash": digest,
@@ -327,6 +386,10 @@ class Registry:
         return report
 
     def installed(self, target: str) -> Dict[str, object]:
+        if not target or not isinstance(target, str):
+            raise SkillError(
+                f"target must be a non-empty string, got {target!r}"
+            )
         lock = self._load_lock(target)
         return dict(lock.get("installed", {}))  # type: ignore[arg-type]
 
@@ -348,7 +411,12 @@ class Registry:
             )
         dest = os.path.join(target, name)
         if os.path.isdir(dest):
-            shutil.rmtree(dest)
+            try:
+                shutil.rmtree(dest)
+            except OSError as exc:
+                raise InstallError(
+                    f"failed to remove skill directory {dest!r}: {exc}"
+                ) from exc
         del installed[name]  # type: ignore[union-attr]
         self._save_lock(target, lock)
         return {"removed": name, "target": os.path.abspath(target)}
