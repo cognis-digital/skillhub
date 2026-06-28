@@ -1,0 +1,20 @@
+$ skillhub-emit --help
+
+usage: skillhub [-h] [--version] [--format {table,json}]
+                {list,search,info,install,installed,remove} ...
+
+Local skill registry and installer for AI agents.
+
+positional arguments:
+  {list,search,info,install,installed,remove}
+    list                list skills in a registry
+    search              rank skills by a query
+    info                show a skill manifest + deps
+    install             install a skill into a target dir
+    installed           list installed skills in a target
+    remove              uninstall a skill from a target
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  --format {table,json}
